@@ -61,7 +61,7 @@ h2 {
     background: white;
     padding: 20px;
     border-radius: 20px;
-    width: 90%;
+    width: 85%;
     max-width: 400px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
@@ -93,9 +93,12 @@ button {
     padding: 15px;
 }
 
+li span{
+  font-size: 25px;
+}
 
 /* ボタン */
-button:not(.newlist-btn,.start-button,.shopping-btn,.todo-btn,.deletelist-btn,.custom-list-btn,.back-btn,.add-btn,.create-btn,.input-row) {
+button:not(.newlist-btn,.start-button,.shopping-btn,.todo-btn,.deletelist-btn,.custom-list-btn,.back-btn,.add-btn,.create-btn,.input-row,.check-btn) {
     padding: 3px 6px;
     margin: 5px;
     border: none;
@@ -107,18 +110,30 @@ button:not(.newlist-btn,.start-button,.shopping-btn,.todo-btn,.deletelist-btn,.c
 　　
 }
 
+.check-btn{
+    font-size: 20px;
+    background: #a49bf2;
+    border: none;
+    color: white;
+    padding: 3px 5px;
+    border-radius: 10px;
+    width: auto;
+}     
+
 /*newlist ボタンのデザイン*/
 .newlist-btn {
     background: pink;
     font-weight: 700;
-    font-size: 30px;
+    font-size: 25px;
     color: white;
     padding: 5px 8px;
     border-radius: 10px;
     width: 50%;
     border: none;
     margin: 3px;
-
+    margin-top: 20px;
+    white-space: nowrap;
+    
 }
 /*newlistで追加したリストのデザ*/
 .custom-list-btn {
@@ -206,7 +221,7 @@ button:not(.newlist-btn,.start-button,.shopping-btn,.todo-btn,.deletelist-btn,.c
       border: none;
       margin: 5px;
       border-radius: 10px;
-      font-size: 45px;
+      font-size: 40px;
       
 }
 
@@ -355,33 +370,79 @@ function addTask() {
 
 function addTaskToList(text) {
     const li = document.createElement("li");
-    li.textContent = text;
+
+    const span = document.createElement("span");
+    span.textContent = text;
+
+    // ダブルタップ編集
+    let clickCount = 0;
+    let clickTimer = null;
+
+    span.onclick = () => {
+        clickCount++;
+
+        if (clickCount === 1) {
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 300);
+        } else if (clickCount === 2) {
+            clearTimeout(clickTimer);
+            clickCount = 0;
+
+            const inputEdit = document.createElement("input");
+            inputEdit.value = span.textContent;
+
+            span.style.display = "none";
+            li.insertBefore(inputEdit, btn);
+
+            inputEdit.focus();
+
+            inputEdit.onblur = () => {
+                if (inputEdit.value.trim() !== "") {
+                    span.textContent = inputEdit.value;
+                }
+                span.style.display = "inline";
+                inputEdit.remove();
+                saveTasks();
+            };
+
+            inputEdit.onkeydown = (e) => {
+                if (e.key === "Enter") inputEdit.blur();
+            };
+        }
+    };
 
     const btn = document.createElement("button");
     btn.textContent = "✔️";
+    btn.classList.add("check-btn");
 
     btn.onclick = () => {
-        
         li.remove();
         saveTasks();
     };
 
+    li.appendChild(span);
     li.appendChild(btn);
+
     document.getElementById("taskList").appendChild(li);
 }
 
+
 function saveTasks() {
-    const arr = [...taskList.children].map(li => li.childNodes[0].nodeValue);
+    const arr = [...taskList.children].map(li =>
+        li.querySelector("span").textContent
+    );
     localStorage.setItem("tasks", JSON.stringify(arr));
 }
+
 function loadTasks() {
-    taskList.innerHTML="";
-    (JSON.parse(localStorage.getItem("tasks"))||[])
-    .forEach(addTaskToList);
+    taskList.innerHTML = "";
+    (JSON.parse(localStorage.getItem("tasks")) || [])
+        .forEach(addTaskToList);
 }
 
 function handleTodoEnter(e){
-     if(e.key==="Enter") addTast("Todo");
+     if(e.key==="Enter") addTast();
 }
     
 
@@ -396,33 +457,75 @@ function addShop() {
 
 function addShopToList(text) {
     const li = document.createElement("li");
-    li.textContent = text;
+
+    const span = document.createElement("span");
+    span.textContent = text;
+
+    // ダブルタップ編集
+    let clickCount = 0;
+    let clickTimer = null;
+
+    span.onclick = () => {
+        clickCount++;
+
+        if (clickCount === 1) {
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 300);
+        } else if (clickCount === 2) {
+            clearTimeout(clickTimer);
+            clickCount = 0;
+
+            const inputEdit = document.createElement("input");
+            inputEdit.value = span.textContent;
+
+            span.style.display = "none";
+            li.insertBefore(inputEdit, btn);
+            inputEdit.focus();
+
+            inputEdit.onblur = () => {
+                if (inputEdit.value.trim() !== "") {
+                    span.textContent = inputEdit.value;
+                }
+                span.style.display = "inline";
+                inputEdit.remove();
+                saveShop();
+            };
+
+            inputEdit.onkeydown = (e) => {
+                if (e.key === "Enter") inputEdit.blur();
+            };
+        }
+    };
 
     const btn = document.createElement("button");
     btn.textContent = "✔️";
+    btn.classList.add("check-btn");
 
     btn.onclick = () => {
         li.remove();
         saveShop();
     };
 
+    li.appendChild(span);
     li.appendChild(btn);
+
     document.getElementById("shopList").appendChild(li);
 }
 
+
 function saveShop() {
-    const arr = [...shopList.children].map(li => li.childNodes[0].nodeValue);
+    const arr = [...shopList.children].map(li =>
+        li.querySelector("span").textContent
+    );
     localStorage.setItem("shops", JSON.stringify(arr));
 }
 
 function loadShop() {
-    shopList.innerHTML="";
-    (JSON.parse(localStorage.getItem("shops"))||[])
-    .forEach(addShopToList);
+    shopList.innerHTML = "";
+    (JSON.parse(localStorage.getItem("shops")) || [])
+        .forEach(addShopToList);
 }
-
-
-
 function handleShopingEnter(e){
    if(e.key==="Enter") addTask("shopping");
 }
@@ -454,8 +557,8 @@ function createList() {
     const input = document.getElementById("newListInput");
     const name = input.value;
 
-    if(!name) return;
-
+        if(!name) return;
+    
     let lists = JSON.parse(localStorage.getItem("customLists")) || [];
     lists.push(name);
 
@@ -477,7 +580,10 @@ function renderCustomLists() {
 
     lists.forEach(name => {
         const btn = document.createElement("button");
-        btn.textContent = name;
+         
+
+
+btn.textContent = name;
         btn.classList.add("custom-list-btn");
 
         btn.onclick = () => openCustomList(name);
@@ -505,8 +611,8 @@ function openCustomList(name) {
                 <h2>${name}</h2>
 
                 <button class="deletelist-btn" onclick="deleteList('${name}')">DELETE YOUR LIST</button>
-</div>
-                <input id="${name}Input">
+</div>        
+                <input id="${name}Input" >
                 <button class="add-btn" onclick="addCustomTask('${name}')">ADD</button>
                 <ul id="${name}List"></ul>
     </div>
@@ -544,17 +650,57 @@ function addCustomTask(name) {
     const list = document.getElementById(name + "List");
 
     const li = document.createElement("li");
-    li.textContent = text;
+
+    const span = document.createElement("span");
+    span.textContent = text;
+
+    let clickCount = 0;
+    let clickTimer = null;
+
+    span.onclick = () => {
+        clickCount++;
+
+        if (clickCount === 1) {
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 300);
+        } else if (clickCount === 2) {
+            clearTimeout(clickTimer);
+            clickCount = 0;
+
+            const inputEdit = document.createElement("input");
+            inputEdit.value = span.textContent;
+
+            li.replaceChild(inputEdit, span);
+            inputEdit.focus();
+
+            inputEdit.onblur = () => {
+                span.textContent = inputEdit.value || span.textContent;
+                li.replaceChild(span, inputEdit);
+                saveCustomTasks(name);
+            };
+
+            inputEdit.onkeydown = (e) => {
+                if (e.key === "Enter") {
+                    inputEdit.blur();
+                }
+            };
+        }
+    };
 
     const btn = document.createElement("button");
     btn.textContent = "✔️";
+    btn.classList.add("check-btn");
 
+   
     btn.onclick = () => {
         li.remove();
         saveCustomTasks(name);
     };
 
+    li.appendChild(span);
     li.appendChild(btn);
+
     list.appendChild(li);
 
     saveCustomTasks(name);
@@ -565,8 +711,9 @@ function addCustomTask(name) {
 function saveCustomTasks(name) {
     const list = document.getElementById(name + "List");
 
-    const arr = [...list.children].map(li => li.childNodes[0].nodeValue);
-
+const arr = [...list.children].map(li =>
+    li.querySelector("span").textContent
+);
     localStorage.setItem(name, JSON.stringify(arr));
 }
 
@@ -581,9 +728,43 @@ function loadCustomTasks(name) {
 
         const span = document.createElement("span");
         span.textContent = text;
+        let clickCount = 0;
+let clickTimer = null;
+
+span.onclick = () => {
+    clickCount++;
+
+    if (clickCount === 1) {
+        clickTimer = setTimeout(() => {
+            clickCount = 0;
+        }, 300);
+    } else if (clickCount === 2) {
+        clearTimeout(clickTimer);
+        clickCount = 0;
+
+        const inputEdit = document.createElement("input");
+        inputEdit.value = span.textContent;
+
+        li.replaceChild(inputEdit, span);
+        inputEdit.focus();
+
+        inputEdit.onblur = () => {
+            span.textContent = inputEdit.value || span.textContent;
+            li.replaceChild(span, inputEdit);
+            saveCustomTasks(name);
+        };
+
+        inputEdit.onkeydown = (e) => {
+            if (e.key === "Enter") {
+                inputEdit.blur();
+            }
+        };
+    }
+};
 
         const btn = document.createElement("button");
         btn.textContent = "✔️";
+        btn.classList.add("check-btn");
 
         btn.onclick = () => {
             li.remove();
